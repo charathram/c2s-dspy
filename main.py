@@ -12,7 +12,7 @@ def main():
 
     lm = dspy.LM(f"azure/{deployment}")
     dspy.configure(lm=lm)
-    response = dspy.Predict("question -> response")
+    response = dspy.ChainOfThought("question -> answer: str")
     print(response(question="I want to visit the capital of United States. Iam a pilot and flight instructor. What should I see?"))
 
 # def aoai_test():
