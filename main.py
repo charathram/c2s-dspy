@@ -1,6 +1,7 @@
 import dotenv
 import dspy
 import os
+from . import models
 #from openai import AzureOpenAI
 
 def main():

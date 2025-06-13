@@ -1,6 +1,7 @@
 import dotenv
 import dspy
 import os
+from models import CodeSummary
 #from openai import AzureOpenAI
 
 def main():
@@ -12,7 +13,7 @@ def main():
 
     lm = dspy.LM(f"azure/{deployment}", cache=False)
     dspy.configure(lm=lm)
-    response = dspy.ChainOfThought("code -> summary: str")
+    response = dspy.ChainOfThought("code -> summary: CodeSummary")
     code = """
     ****************************************************************
           *  This program demonstrates the following Language            *
