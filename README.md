@@ -14,6 +14,7 @@ C2S-DSPy is designed to automatically analyze code files and generate meaningful
 - **Confidence Scoring**: Provides confidence levels for generated summaries
 - **Azure OpenAI Integration**: Leverages Azure's GPT models through DSPy
 - **Metadata Tracking**: Automatically tracks creation timestamps and file information
+- **Neo4j Graph Database**: Store and query code analysis results as graph data
 
 ## Installation
 
@@ -48,6 +49,14 @@ AZURE_API_VERSION=2025-04-01-preview
 
 ### Basic Code Summarization
 
+Analyze a specific file from the sample inputs:
+
+```bash
+python3 c2s.py -f sample_inputs/COACTUPC.cbl
+```
+
+Or analyze the default sample:
+
 ```bash
 python3 c2s.py
 ```
@@ -63,6 +72,18 @@ c2s-dspy/
 ├── c2s.py                   # Main code-to-summary implementation
 ├── main.py                  # Basic DSPy example
 ├── example_usage.py         # Usage examples and demonstrations
+├── utils.py                 # Utility functions for file operations
+├── Makefile                 # Neo4j management commands
+├── docker-compose.yml       # Neo4j container configuration
+├── docs/
+│   └── neo4j-setup.md       # Neo4j setup and usage guide
+├── sample_inputs/           # Sample code files for testing
+│   ├── ACCTFILE.jcl         # JCL job control language sample
+│   ├── COACTUP.CPY          # COBOL copybook sample
+│   ├── COACTUP.bms          # BMS map definition sample
+│   ├── COACTUPC.cbl         # COBOL program sample
+│   ├── COADM02Y.cpy         # COBOL copybook sample
+│   └── sample_code.cbl      # Basic COBOL code sample
 └── .gitignore              # Git ignore rules
 ```
 
@@ -97,27 +118,71 @@ The project uses environment variables for Azure OpenAI configuration:
 | `AZURE_DEPLOYMENT` | Deployment name in Azure | `gpt-4o` |
 | `AZURE_API_VERSION` | API version to use | `2024-02-01` |
 
+## Neo4j Graph Database
+
+This project includes a complete Neo4j setup for storing and querying code analysis results as graph data. Neo4j is perfect for analyzing code relationships, dependencies, and data model connections.
+
+### Quick Start with Neo4j
+
+```bash
+# Start Neo4j database
+make start
+
+# Check status
+make status
+
+# Open web interface
+make web
+```
+
+**📖 For complete Neo4j setup, configuration, and usage instructions, see [docs/neo4j-setup.md](docs/neo4j-setup.md)**
+
+### Neo4j Management Commands
+
+| Command | Description |
+|---------|-------------|
+| `make start` | Start Neo4j database |
+| `make stop` | Stop Neo4j database |
+| `make status` | Show Neo4j status |
+| `make shell` | Open Cypher shell |
+| `make backup` | Create database backup |
+| `make web` | Open web interface |
+| `make help` | Show all commands |
+
+### Connection Details
+
+- **Web Interface**: http://localhost:7474
+- **Bolt Connection**: bolt://localhost:7687
+- **Username**: `neo4j`
+- **Password**: `password123`
+
 ## Examples
 
-### Summarizing a Python Script
+### Sample Input Files
 
-The project includes an example that summarizes a COBOL program, demonstrating the system's ability to handle legacy code:
+The project includes various sample files in the `sample_inputs/` directory for testing different code types:
 
-```python
-# Example COBOL program summarization
-code = """
-****************************************************************
-*  This program demonstrates the following Language            *
-*  Environment callable services : CEEMOUT, CEELOCT, CEEDATE  *
-****************************************************************
-Identification Division.
-Program-id.    AWIXMP.
-...
-"""
+- **`COACTUPC.cbl`** - Complete COBOL program with data structures
+- **`COACTUP.CPY`** - COBOL copybook with data definitions  
+- **`COACTUP.bms`** - BMS map definition for screen layouts
+- **`ACCTFILE.jcl`** - JCL job control language script
+- **`COADM02Y.cpy`** - Additional COBOL copybook sample
+- **`sample_code.cbl`** - Basic COBOL code example
 
-response = dspy.ChainOfThought("code -> summary: CodeSummary")
-result = response(code=code)
+### Analyzing Sample Files
+
+```bash
+# Analyze a COBOL program
+python3 c2s.py -f sample_inputs/COACTUPC.cbl
+
+# Analyze a copybook
+python3 c2s.py -f sample_inputs/COACTUP.CPY
+
+# Analyze a BMS map
+python3 c2s.py -f sample_inputs/COACTUP.bms
 ```
+
+The system demonstrates its ability to handle legacy mainframe code and extract meaningful summaries from various file types.
 
 ## Development
 

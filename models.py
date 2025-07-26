@@ -1,6 +1,18 @@
 from pydantic import BaseModel, Field
 from typing import Optional
 from datetime import datetime
+from enum import Enum
+
+
+class CodeFileType(str, Enum):
+    """
+    Enumeration of code file classification types.
+    """
+    SCREEN = "Screen"
+    DATA_MODEL = "Data Model"
+    API = "API"
+    BUSINESS_LOGIC = "Business Logic"
+    DATABASE = "Database"
 
 
 class CodeSummary(BaseModel):
@@ -41,6 +53,18 @@ class CodeSummary(BaseModel):
         le=1.0
     )
 
+    classification: Optional[CodeFileType] = Field(
+        default=None,
+        description="Classification of the code file type",
+        examples=[CodeFileType.SCREEN, CodeFileType.API]
+    )
+
+    suggested_classification: Optional[str] = Field(
+        default=None,
+        description="LLM-suggested classification of the code file type",
+        examples=["Business Logic", "Data Model"]
+    )
+
     model_config = {
         "json_encoders": {
             datetime: lambda v: v.isoformat()
@@ -48,7 +72,18 @@ class CodeSummary(BaseModel):
     }
 
     def __str__(self) -> str:
-        return f"CodeSummary(filename='{self.filename}', summary_length={len(self.summary)})"
+        classification_str = self.classification.value if self.classification else "None"
+        suggested_classification_str = self.suggested_classification or "None"
+
+        return (f"CodeSummary(\n"
+                f"  filename: {self.filename}\n"
+                f"  language: {self.language or 'Unknown'}\n"
+                f"  classification: {classification_str}\n"
+                f"  suggested_classification: {suggested_classification_str}\n"
+                f"  confidence_score: {self.confidence_score}\n"
+                f"  created_at: {self.created_at.strftime('%Y-%m-%d %H:%M:%S')}\n"
+                f"  summary: {self.summary}\n"
+                f")")
 
     def __repr__(self) -> str:
         return self.__str__()

@@ -1,103 +1,78 @@
+import argparse
 import dotenv
 import dspy
 import os
+from typing import List
 from models import CodeSummary
 #from openai import AzureOpenAI
 
+
+class ExtractExternalCopyBooks(dspy.Signature):
+    """
+    List of all external copybooks referenced in the source code.
+
+    An external copybook is a separate file that contains data definitions and is referenced in the main code using the COPY statement but it is not defined in the code itself.
+    """
+
+    code = dspy.InputField(desc="Source code text to analyze for data models")
+    copybooks: List[str] = dspy.OutputField(desc="list of Copybooks found in the code")
+
+
+def read_code_file(file_path="sample_code.cbl"):
+    """Read code from filesystem and return its contents."""
+    try:
+        with open(file_path, "r", encoding="utf-8") as file:
+            return file.read()
+    except FileNotFoundError:
+        print(f"Error: {file_path} not found. Please ensure the file exists in the current directory.")
+        return None
+    except IOError as e:
+        print(f"Error reading file {file_path}: {e}")
+        return None
+
+
 def main():
-    print("Hello from c2s-dspy!")
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser(description="Analyze code using DSPy")
+    parser.add_argument(
+        "-f", "--file",
+        default="sample_code.cbl",
+        help="Path to the code file to analyze (default: sample_code.cbl)"
+    )
+    args = parser.parse_args()
+    code_file_path = args.file
     dotenv.load_dotenv()
 
     deployment = os.environ["AZURE_DEPLOYMENT"]
 
-
     lm = dspy.LM(f"azure/{deployment}", cache=False)
     dspy.configure(lm=lm)
     response = dspy.ChainOfThought("code -> summary: CodeSummary")
-    code = """
-    ****************************************************************
-          *  This program demonstrates the following Language            *
-          *  Environment callable                                        *
-          *  services : CEEMOUT, CEELOCT, CEEDATE                        *
-          ****************************************************************
-          ****************************************************************
-          **           I D          D I V I S I O N                    ***
-          ****************************************************************
-           Identification Division.
-           Program-id.    AWIXMP.
-          ****************************************************************
-          **           D A T A      D I V I S I O N                    ***
-          ****************************************************************
-           Data Division.
-           Working-Storage Section.
-          ****************************************************************
-          **  Declarations for the local date/time service.
-          ****************************************************************
-           01   Feedback.
-           COPY CEEIGZCT
-            02   Fb-severity      PIC 9(4) Binary.
-            02   Fb-detail        PIC X(10).
-           77   Dest-output       PIC S9(9) Binary.
-           77   Lildate           PIC S9(9) Binary.
-           77   Lilsecs           COMP-2.
-           77   Greg              PIC X(17).
-          ****************************************************************
-          **  Declarations for messages and pattern for date formatting.
-          ****************************************************************
-           01   Pattern.
-            02                    PIC 9(4) Binary Value 45.
-            02                    PIC X(45) Value
-                "Today is Wwwwwwwwwwwwz, Mmmmmmmmmmz ZD, YYYY.".
+    extract_models = dspy.ChainOfThought(ExtractExternalCopyBooks)
+    # extract_models = dspy.ChainOfThought("code -> copybooks: List[str]")
 
-           77   Start-Msg         PIC X(80) Value
-                "Callable Service example starting.".
+    # Read code from filesystem
+    code = read_code_file(code_file_path)
+    if code is None:
+        return
 
-           77   Ending-Msg        PIC X(80) Value
-                "Callable Service example ending.".
+    print("Code Summary:")
+    summary = response(code=code)
+    print(summary.summary)
+    print(f"\n{'#'*80}\n")
 
-           01 Msg.
-             02 Stringlen         PIC S9(4) Binary.
-             02 Str               .
-              03                  PIC X Occurs 1 to 80 times
-                                         Depending on Stringlen.
-          ****************************************************************
-          **           P R O C      D I V I S I O N                    ***
-          ****************************************************************
-           Procedure Division.
-           000-Main-Logic.
-               Perform 100-Say-Hello.
-               Perform 200-Get-Date.
-               Perform 300-Say-Goodbye.
-               Stop Run.
-          **
-          ** Setup initial values and say we are starting.
-          **
-           100-Say-Hello.
-               Move 80 to Stringlen.
-               Move 02 to Dest-output.
-               Move Start-Msg to Str.
-               CALL "CEEMOUT" Using Msg   Dest-output Feedback.
-               Move Spaces to Str.        CALL "CEEMOUT" Using Msg Dest-output Feedback.
-          **
-          ** Get the local date and time and display it.
-          **
-           200-Get-Date.
-               CALL "CEELOCT" Using Lildate Lilsecs     Greg      Feedback.
-               CALL "CEEDATE" Using Lildate Pattern     Str       Feedback.
-               CALL "CEEMOUT" Using Msg     Dest-output Feedback.
-               Move Spaces to Str.
-               CALL "CEEMOUT" Using Msg     Dest-output Feedback.
-          **
-          ** Say Goodbye.
-          **
-           300-Say-Goodbye.
-               Move Ending-Msg to Str.
-               CALL "CEEMOUT" Using Msg     Dest-output Feedback.
-           End program AWIXMP.
-    """
-    print(response(code=code))
-    print(f"\n{'#'*50}\n")
-    dspy.inspect_history()
+    print("Copybooks Found:")
+    models_result = extract_models(code=code)
+
+    if hasattr(models_result, 'copybooks'):
+        print(type(models_result.copybooks))
+        print(models_result.copybooks)
+    else:
+        print(models_result)
+    print(f"\n{'#'*80}\n")
+
+    # dspy.inspect_history()
+
 
 if __name__ == "__main__":
     main()
