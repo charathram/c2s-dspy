@@ -1,0 +1,41 @@
+FROM neo4j:5.15-community
+
+# Set environment variables for Neo4j configuration
+ENV NEO4J_AUTH=neo4j/password123
+ENV NEO4J_dbms_default__database=neo4j
+ENV NEO4J_dbms_memory_heap_initial__size=512m
+ENV NEO4J_dbms_memory_heap_max__size=2G
+ENV NEO4J_dbms_memory_pagecache_size=1G
+
+# Enable APOC procedures (useful for data import/export and graph algorithms)
+ENV NEO4J_PLUGINS=["apoc"]
+
+# Configure Neo4j to accept connections from any host
+ENV NEO4J_dbms_default__listen__address=0.0.0.0
+ENV NEO4J_dbms_connector_bolt_listen__address=0.0.0.0:7687
+ENV NEO4J_dbms_connector_http_listen__address=0.0.0.0:7474
+
+# Create directories for data persistence
+RUN mkdir -p /data /logs /import /plugins
+
+# Set proper ownership for Neo4j directories
+RUN chown -R neo4j:neo4j /data /logs /import /plugins
+
+# Copy any initialization scripts (optional)
+# COPY init-scripts/ /var/lib/neo4j/bin/
+
+# Expose Neo4j ports
+# 7474 - HTTP
+# 7687 - Bolt
+EXPOSE 7474 7687
+
+# Set the working directory
+WORKDIR /var/lib/neo4j
+
+# Use the default Neo4j entrypoint
+ENTRYPOINT ["/startup/docker-entrypoint.sh"]
+CMD ["neo4j"]
+
+# Health check to ensure Neo4j is running
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:7474/ || exit 1
