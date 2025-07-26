@@ -49,6 +49,9 @@ def main():
     dspy.configure(lm=lm)
     response = dspy.ChainOfThought("code -> summary: CodeSummary")
     extract_models = dspy.ChainOfThought(ExtractExternalCopyBooks)
+
+    # The simple signature below works well, but I prefer a class-based
+    # signature so that I can control the outputs better.
     # extract_models = dspy.ChainOfThought("code -> copybooks: List[str]")
 
     # Read code from filesystem
