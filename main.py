@@ -1,19 +1,37 @@
 import dotenv
 import dspy
 import os
+from logging_config import get_default_logger, PerformanceLogger
 #from openai import AzureOpenAI
 
+# Initialize logger
+logger = get_default_logger()
+
 def main():
-    print("Hello from c2s-dspy!")
-    dotenv.load_dotenv()
+    logger.info("Starting c2s-dspy main example")
 
-    deployment = os.environ["AZURE_DEPLOYMENT"]
+    with PerformanceLogger() as perf:
+        perf.start("main_example")
 
+        dotenv.load_dotenv()
+        logger.debug("Environment variables loaded")
 
-    lm = dspy.LM(f"azure/{deployment}")
-    dspy.configure(lm=lm)
-    response = dspy.ChainOfThought("question -> answer: str")
-    print(response(question="I want to visit the capital of United States. Iam a pilot and flight instructor. What should I see?"))
+        deployment = os.environ["AZURE_DEPLOYMENT"]
+        logger.info(f"Using Azure deployment: {deployment}")
+
+        lm = dspy.LM(f"azure/{deployment}")
+        dspy.configure(lm=lm)
+        logger.debug("DSPy configured with Azure LM")
+
+        response = dspy.ChainOfThought("question -> answer: str")
+
+        question = "I want to visit the capital of United States. I am a pilot and flight instructor. What should I see?"
+        logger.debug(f"Asking question: {question}")
+
+        result = response(question=question)
+        logger.info(f"Response received: {result}")
+
+    logger.info("Main example completed successfully")
 
 # def aoai_test():
 #     dotenv.load_dotenv()

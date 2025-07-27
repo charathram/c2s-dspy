@@ -9,10 +9,11 @@ class CodeFileType(str, Enum):
     Enumeration of code file classification types.
     """
     SCREEN = "Screen"
-    DATA_MODEL = "Data Model"
+    DATA_MODEL = "Data_Model"
     API = "API"
-    BUSINESS_LOGIC = "Business Logic"
+    BUSINESS_LOGIC = "Business_Logic"
     DATABASE = "Database"
+    PROGRAM_JOB_CONTROL = "JCL"
 
 
 class CodeSummary(BaseModel):
@@ -24,9 +25,15 @@ class CodeSummary(BaseModel):
     """
 
     filename: str = Field(
-        description="The name or path of the code file",
+        description="The name of the code file",
         min_length=1,
         examples=["main.py"]
+    )
+
+    filepath: str = Field(
+        description="The full path for the code file",
+        min_length=1,
+        examples=["./directory/main.py"]
     )
 
     summary: str = Field(
@@ -76,7 +83,7 @@ class CodeSummary(BaseModel):
         suggested_classification_str = self.suggested_classification or "None"
 
         return (f"CodeSummary(\n"
-                f"  filename: {self.filename}\n"
+                f"  filepath: {self.filepath}\n"
                 f"  language: {self.language or 'Unknown'}\n"
                 f"  classification: {classification_str}\n"
                 f"  suggested_classification: {suggested_classification_str}\n"

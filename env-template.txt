@@ -1,0 +1,107 @@
+# C2S-DSPy Environment Configuration Template
+# Copy this content to a file named ".env" in the project root
+# Replace placeholder values with your actual configuration
+
+# =============================================================================
+# AZURE OPENAI CONFIGURATION (REQUIRED)
+# =============================================================================
+
+# Your Azure OpenAI API key
+# Get this from your Azure OpenAI resource in the Azure portal
+AZURE_API_KEY=your_azure_api_key_here
+
+# Your Azure OpenAI endpoint URL
+# Format: https://your-resource-name.openai.azure.com/
+AZURE_API_BASE=https://your-resource.openai.azure.com/
+
+# The deployment name you created in Azure OpenAI Studio
+# This is the name you gave to your GPT-4 or other model deployment
+AZURE_DEPLOYMENT=your_deployment_name
+
+# Azure OpenAI API version
+# Use the latest version for best features
+AZURE_API_VERSION=2025-04-01-preview
+
+# =============================================================================
+# LOGGING CONFIGURATION (OPTIONAL)
+# =============================================================================
+
+# Logging level controls verbosity of output
+# Options: DEBUG, INFO, WARNING, ERROR, CRITICAL
+# DEBUG = Most verbose (shows all messages)
+# INFO = Standard level (recommended for normal use)
+# WARNING = Only warnings and errors
+# ERROR = Only errors and critical messages
+# CRITICAL = Only critical messages
+LOG_LEVEL=INFO
+
+# Enable/disable file logging
+# true = Save logs to files in LOG_DIR
+# false = No file logging
+LOG_TO_FILE=true
+
+# Enable/disable console logging
+# true = Show logs in terminal/console
+# false = No console output (quiet mode)
+LOG_TO_CONSOLE=true
+
+# Directory where log files will be saved
+# Relative to project root or absolute path
+# Directory will be created automatically if it doesn't exist
+LOG_DIR=./logs
+
+# =============================================================================
+# ADVANCED LOGGING OPTIONS (OPTIONAL)
+# =============================================================================
+
+# Maximum log file size before rotation (default: 10MB)
+# LOG_MAX_FILE_SIZE=10485760
+
+# Number of backup log files to keep (default: 5)
+# LOG_BACKUP_COUNT=5
+
+# =============================================================================
+# USAGE EXAMPLES
+# =============================================================================
+
+# Basic usage (uses above settings):
+# uv run c2s.py
+
+# Override log level for debugging:
+# LOG_LEVEL=DEBUG uv run c2s.py
+
+# Quiet mode (no console output, only file logging):
+# LOG_TO_CONSOLE=false uv run c2s.py
+
+# Debug mode with no file logging:
+# LOG_LEVEL=DEBUG LOG_TO_FILE=false uv run c2s.py
+
+# =============================================================================
+# SETUP INSTRUCTIONS
+# =============================================================================
+
+# 1. Copy this file and rename it to ".env" (without quotes)
+# 2. Replace all "your_*" placeholder values with your actual Azure OpenAI credentials
+# 3. Adjust logging settings as needed
+# 4. Save the file in the same directory as c2s.py
+# 5. Run: uv run c2s.py
+
+# Security Note: Never commit the .env file to version control!
+# The .env file is already included in .gitignore for security.
+
+# =============================================================================
+# TROUBLESHOOTING
+# =============================================================================
+
+# If you get authentication errors:
+# - Verify AZURE_API_KEY is correct
+# - Check that AZURE_API_BASE URL is correct
+# - Ensure AZURE_DEPLOYMENT name matches your Azure OpenAI deployment
+
+# If debug messages don't appear:
+# - Set LOG_LEVEL=DEBUG in this file or run with LOG_LEVEL=DEBUG uv run c2s.py
+
+# For more help, see:
+# - README.md for detailed setup instructions
+# - docs/uv-usage.md for UV package manager usage
+# - Run: uv run test_debug_logging.py to test logging configuration
