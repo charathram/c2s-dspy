@@ -2,3 +2,8 @@
 .env
 __pycache__/
 .ropeproject/
+
+# Log files
+logs/
+*.log
+*.log.*

@@ -171,6 +171,11 @@ print(result)
 conn.close()
 ```
 
+To run this example:
+```bash
+uv run your_neo4j_script.py
+```
+
 ## Backup and Restore
 
 ### Creating Backups

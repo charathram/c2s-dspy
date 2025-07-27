@@ -15,35 +15,70 @@ C2S-DSPy is designed to automatically analyze code files and generate meaningful
 - **Azure OpenAI Integration**: Leverages Azure's GPT models through DSPy
 - **Metadata Tracking**: Automatically tracks creation timestamps and file information
 - **Neo4j Graph Database**: Store and query code analysis results as graph data
+- **Comprehensive Logging**: Structured logging with performance monitoring and debug capabilities
 
 ## Installation
 
 ### Prerequisites
 
-- Python 3.12 or higher
+- **UV package manager** (recommended) - An extremely fast Python package manager
 - Azure OpenAI service access
-- UV package manager
+- Python 3.12+ (automatically managed by UV)
 
 ### Setup
 
-1. Clone the repository:
+1. **Install UV** (if not already installed):
+```bash
+# macOS and Linux
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Windows
+powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+
+# Using Homebrew (macOS)
+brew install uv
+```
+
+2. Clone the repository:
 ```bash
 git clone <repository-url>
 cd c2s-dspy
 ```
 
-2. Install dependencies using UV:
+3. Install dependencies using UV:
 ```bash
 uv sync
 ```
 
-3. Set up environment variables by creating a `.env` file:
+4. Set up environment variables by creating a `.env` file:
+
+**Option 1: Use the provided template (Recommended)**
+```bash
+cp env-template.txt .env
+# Then edit .env with your actual credentials
+```
+
+**Option 2: Create .env manually**
 ```env
+# Azure OpenAI Configuration (Required)
 AZURE_API_KEY=your_azure_api_key
 AZURE_API_BASE=https://your-resource.openai.azure.com/
 AZURE_DEPLOYMENT=your_deployment_name
 AZURE_API_VERSION=2025-04-01-preview
+
+# Logging Configuration (Optional)
+LOG_LEVEL=INFO
+LOG_TO_FILE=true
+LOG_TO_CONSOLE=true
+LOG_DIR=./logs
 ```
+
+**Important**: 
+- Replace `your_azure_api_key`, `your-resource`, and `your_deployment_name` with your actual Azure OpenAI credentials
+- The `env-template.txt` file contains detailed explanations for each setting
+- Never commit the `.env` file to version control (it's already in `.gitignore`)
+
+**📖 For detailed UV usage instructions, see [docs/uv-usage.md](docs/uv-usage.md)**
 
 ## Usage
 
@@ -52,14 +87,22 @@ AZURE_API_VERSION=2025-04-01-preview
 Analyze a specific file from the sample inputs:
 
 ```bash
-python3 c2s.py -f sample_inputs/COACTUPC.cbl
+uv run c2s.py -f sample_inputs/COACTUPC.cbl
 ```
 
-Or analyze the default sample:
+Or analyze all files in a directory:
 
 ```bash
-python3 c2s.py
+uv run c2s.py -d sample_inputs
 ```
+
+Or analyze the default sample (when neither -f nor -d is specified):
+
+```bash
+uv run c2s.py
+```
+
+**Note**: The `-f` (file) and `-d` (directory) options are mutually exclusive - you can specify one or the other, but not both.
 
 ## Project Structure
 
@@ -73,10 +116,15 @@ c2s-dspy/
 ├── main.py                  # Basic DSPy example
 ├── example_usage.py         # Usage examples and demonstrations
 ├── utils.py                 # Utility functions for file operations
+├── logging_config.py        # Centralized logging configuration
+├── example_logging.py       # Logging usage examples
+├── env-template.txt         # Environment configuration template
 ├── Makefile                 # Neo4j management commands
 ├── docker-compose.yml       # Neo4j container configuration
 ├── docs/
-│   └── neo4j-setup.md       # Neo4j setup and usage guide
+│   ├── neo4j-setup.md       # Neo4j setup and usage guide
+│   └── uv-usage.md          # UV package manager usage guide
+├── logs/                    # Log files directory (auto-created)
 ├── sample_inputs/           # Sample code files for testing
 │   ├── ACCTFILE.jcl         # JCL job control language sample
 │   ├── COACTUP.CPY          # COBOL copybook sample
@@ -109,14 +157,25 @@ Main implementation that:
 
 ## Configuration
 
-The project uses environment variables for Azure OpenAI configuration:
+The project uses environment variables for configuration:
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `AZURE_API_KEY` | Your Azure OpenAI API key | `abc123...` |
-| `AZURE_API_BASE` | Azure OpenAI endpoint URL | `https://your-resource.openai.azure.com/` |
-| `AZURE_DEPLOYMENT` | Deployment name in Azure | `gpt-4o` |
-| `AZURE_API_VERSION` | API version to use | `2024-02-01` |
+### Azure OpenAI Configuration
+
+| Variable | Description | Example | Required |
+|----------|-------------|---------|----------|
+| `AZURE_API_KEY` | Your Azure OpenAI API key | `abc123...` | Yes |
+| `AZURE_API_BASE` | Azure OpenAI endpoint URL | `https://your-resource.openai.azure.com/` | Yes |
+| `AZURE_DEPLOYMENT` | Deployment name in Azure | `gpt-4o` | Yes |
+| `AZURE_API_VERSION` | API version to use | `2024-02-01` | Yes |
+
+### Logging Configuration
+
+| Variable | Description | Options | Default |
+|----------|-------------|---------|---------|
+| `LOG_LEVEL` | Logging verbosity level | `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL` | `INFO` |
+| `LOG_TO_FILE` | Enable file logging | `true`, `false` | `true` |
+| `LOG_TO_CONSOLE` | Enable console logging | `true`, `false` | `true` |
+| `LOG_DIR` | Directory for log files | Any valid path | `./logs` |
 
 ## Neo4j Graph Database
 
@@ -156,6 +215,132 @@ make web
 - **Username**: `neo4j`
 - **Password**: `password123`
 
+## Logging System
+
+C2S-DSPy includes a comprehensive logging system that provides structured logging, performance monitoring, and debugging capabilities.
+
+### Logging Features
+
+- **Colored Console Output**: Different colors for different log levels
+- **File Logging**: Automatic log file rotation with configurable size limits
+- **Performance Monitoring**: Built-in timing for operations
+- **Multiple Log Levels**: DEBUG, INFO, WARNING, ERROR, CRITICAL
+- **Structured Output**: Detailed context for debugging
+- **Environment Configuration**: Control via environment variables
+
+### Quick Start with Logging
+
+```bash
+# Run with default settings from .env file
+uv run c2s.py
+
+# Override LOG_LEVEL for one-time debug session
+LOG_LEVEL=DEBUG uv run c2s.py
+
+# Override multiple logging settings
+LOG_LEVEL=DEBUG LOG_TO_FILE=false uv run c2s.py
+
+# Run logging examples
+uv run example_logging.py
+
+# Test debug logging behavior
+uv run test_debug_logging.py
+```
+
+### Environment Variables for Logging
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `LOG_LEVEL` | Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL) | `INFO` |
+| `LOG_TO_FILE` | Enable file logging (true/false) | `true` |
+| `LOG_TO_CONSOLE` | Enable console logging (true/false) | `true` |
+| `LOG_DIR` | Directory for log files | `./logs` |
+
+### Logging in Code
+
+```python
+from logging_config import get_default_logger, PerformanceLogger
+
+# Get logger
+logger = get_default_logger()
+
+# Basic logging
+logger.info("Processing started")
+logger.debug("Detailed debug information")
+logger.error("An error occurred")
+
+# Performance monitoring
+with PerformanceLogger() as perf:
+    perf.start("operation_name")
+    # Your code here
+    # Automatically logs duration on exit
+```
+
+### Log Files
+
+- **Location**: `./logs/` directory
+- **Format**: `c2s-dspy.log` (with automatic rotation)
+- **Retention**: 5 backup files kept automatically
+- **Size Limit**: 10MB per file before rotation
+
+### Debug Messages Not Appearing?
+
+If debug messages aren't showing up (like line 88 in c2s.py), it's because:
+
+1. **Default Level**: The logger defaults to INFO level (20)
+2. **DEBUG Level**: Debug messages have level 10 (lower than INFO)
+3. **Filtering**: Messages below the logger's level are filtered out
+
+**Solutions**:
+
+1. **Set LOG_LEVEL in .env file (Recommended)**:
+```env
+LOG_LEVEL=DEBUG
+```
+
+2. **Override for one-time use**:
+```bash
+LOG_LEVEL=DEBUG uv run c2s.py
+```
+
+3. **Set permanently in shell**:
+```bash
+export LOG_LEVEL=DEBUG  # Linux/macOS
+set LOG_LEVEL=DEBUG     # Windows
+```
+
+**Test the logging behavior**:
+```bash
+uv run test_debug_logging.py
+```
+
+### File Utilities
+
+The project includes utilities for file operations with advanced filtering:
+
+```python
+from utils import get_all_files, get_all_files_generator, get_files_by_extension
+
+# Get all files in a directory
+files = get_all_files("sample_inputs")
+
+# Ignore specific file extensions
+files = get_all_files("sample_inputs", ignore_extensions=['.log', '.tmp'])
+
+# Generator version for memory efficiency
+for file_path in get_all_files_generator("sample_inputs", ignore_extensions=['.bak']):
+    process_file(file_path)
+
+# Get files by extension with ignore list
+py_files = get_files_by_extension(".", ".py", ignore_extensions=['.pyc', '.pyo'])
+```
+
+**Features**:
+- **Extension normalization**: Handles `.ext`, `ext`, case variations
+- **Recursive scanning**: Searches all subdirectories
+- **Memory efficient**: Generator version available
+- **Flexible filtering**: Multiple extensions supported
+
 ## Examples
 
 ### Sample Input Files
@@ -172,14 +357,20 @@ The project includes various sample files in the `sample_inputs/` directory for 
 ### Analyzing Sample Files
 
 ```bash
-# Analyze a COBOL program
-python3 c2s.py -f sample_inputs/COACTUPC.cbl
+# Analyze a specific COBOL program
+uv run c2s.py -f sample_inputs/COACTUPC.cbl
 
-# Analyze a copybook
-python3 c2s.py -f sample_inputs/COACTUP.CPY
+# Analyze a specific copybook
+uv run c2s.py -f sample_inputs/COACTUP.CPY
 
-# Analyze a BMS map
-python3 c2s.py -f sample_inputs/COACTUP.bms
+# Analyze a specific BMS map
+uv run c2s.py -f sample_inputs/COACTUP.bms
+
+# Analyze all files in the sample directory
+uv run c2s.py -d sample_inputs
+
+# Note: Cannot use both -f and -d together
+# This will show an error: uv run c2s.py -f file.py -d directory
 ```
 
 The system demonstrates its ability to handle legacy mainframe code and extract meaningful summaries from various file types.
@@ -190,20 +381,45 @@ The system demonstrates its ability to handle legacy mainframe code and extract 
 
 1. **Basic DSPy Example**:
 ```bash
-python3 main.py
+uv run main.py
 ```
 
 2. **Code Summarization Example**:
 ```bash
-python3 c2s.py
+uv run c2s.py
 ```
 
 3. **Model Usage Examples**:
 ```bash
-python3 example_usage.py
+uv run example_usage.py
 ```
 
-### Dependencies
+### Testing Logging
+
+Run the logging examples to see all features:
+
+```bash
+# Basic logging example
+uv run example_logging.py
+
+# Override log level temporarily
+LOG_LEVEL=DEBUG uv run example_logging.py
+LOG_LEVEL=WARNING uv run example_logging.py
+
+# Override logging settings (console only)
+LOG_TO_FILE=false uv run example_logging.py
+
+# Multiple overrides
+LOG_LEVEL=DEBUG LOG_TO_CONSOLE=false uv run example_logging.py
+
+# Test debug logging behavior
+uv run test_debug_logging.py
+
+# Test ignore_extensions functionality
+uv run test_ignore_extensions.py
+```
+
+## Dependencies
 
 - **DSPy** (≥2.6.27): Declarative self-improving Python
 - **OpenAI** (≥1.85.0): Azure OpenAI integration
